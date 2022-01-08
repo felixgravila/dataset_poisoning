@@ -59,7 +59,7 @@ def poison(y: List[int], population: List[int], percentage: int):
     return np.concatenate([y[:cutoff], wrong_labels]).astype(np.int8)
 
 
-def make_simple_conv_model(input_shape):
+def make_simple_conv_model(input_shape, num_classes):
     model = tf.keras.Sequential(
         [
             L.Conv2D(32, (3, 3), activation="relu", input_shape=input_shape),
@@ -73,7 +73,7 @@ def make_simple_conv_model(input_shape):
             L.Flatten(),
             L.Dense(128, activation="relu"),
             L.Dense(128, activation="relu"),
-            L.Dense(10, activation="softmax"),
+            L.Dense(num_classes, activation="softmax"),
         ]
     )
 
@@ -86,8 +86,10 @@ def make_simple_conv_model(input_shape):
     return model
 
 
-def train_model(train_X, train_y, val_X, val_y, save_dir, logs_dir):
-    model = make_simple_conv_model(input_shape=train_X.shape[1:])
+def train_model(train_X, train_y, val_X, val_y, num_classes, save_dir, logs_dir):
+    model = make_simple_conv_model(
+        input_shape=train_X.shape[1:], num_classes=num_classes
+    )
 
     callbacks = [
         tf.keras.callbacks.ModelCheckpoint(
@@ -146,8 +148,9 @@ def main(argv):
             poison_y,
             val_X,
             val_y,
-            modeldir,
-            os.path.join(LOGS_ROOT_DIR, str(poison_perc)),
+            num_classes=len(label_population),
+            save_dir=modeldir,
+            logs_dir=os.path.join(LOGS_ROOT_DIR, str(poison_perc)),
         )
 
 
