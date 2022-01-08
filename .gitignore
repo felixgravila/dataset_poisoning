@@ -1,0 +1,8 @@
+.vscode
+.ipynb_checkpoints
+default-*.ipynb
+__pycache__
+.DS_Store
+
+models
+logs
