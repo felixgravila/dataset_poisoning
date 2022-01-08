@@ -1,5 +1,3 @@
-#%%
-
 import os
 import random
 from typing import List
@@ -154,8 +152,6 @@ def main(argv):
         )
 
 
-#%%
-
 FLAGS = flags.FLAGS
 flags.DEFINE_string("dataset", "mnist", "Dataset to use.")
 flags.DEFINE_list(
@@ -165,5 +161,3 @@ flags.DEFINE_bool("overwrite", False, "Overwrite models.")
 
 if __name__ == "__main__":
     app.run(main)
-
-# %%
