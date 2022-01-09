@@ -6,10 +6,10 @@ A simple <100k parameter convolutional neural network is used for the evaluation
 Results show the surprising robustness of the network even when over half of the dataset is mislabelled. Evaluating the same on a dataset consisting of subsets of 1000 items from the original datasets the performance drops quicker, showing that more data with more errors can yield better results than less data with fewer errors.
 
 #### Trained on the entire provided training dataset
-<img src="full_all.png" width="100%"/>
+<img src="images/full_all.png" width="100%"/>
 
 #### Trained on a subset of 1000 items from the training dataset
-<img src="1000_all.png" width="100%"/>
+<img src="images/1000_all.png" width="100%"/>
 
 ## Requirements
 
