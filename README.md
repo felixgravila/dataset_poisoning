@@ -1,4 +1,4 @@
-# dataset_poisoning
+# The Effect Of Dataset Poisoning On Model Accuracy
 Analysis on how much dataset poisoning (mislabeled data) destroys a model, on default keras datasets: mnist, fashion_mnist, cifar10, cifar100.
 
 A simple <100k parameter convolutional neural network is used for the evaluation of all models, as only relative performance is relevant.
