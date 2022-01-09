@@ -175,7 +175,9 @@ flags.DEFINE_bool(
     "biased", False, "Have biased poisoning or perfectly random distribution."
 )
 flags.DEFINE_bool("overwrite", False, "Overwrite models.")
-flags.DEFINE_integer("dataset_size", 0, "How much of the dataset to use for training")
+flags.DEFINE_integer(
+    "dataset_size", 0, "How much of the dataset to use for training, 0 for all"
+)
 flags.DEFINE_integer("batch_size", 256, "Batch size to use for training")
 
 if __name__ == "__main__":
