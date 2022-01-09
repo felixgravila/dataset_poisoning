@@ -6,4 +6,6 @@ __pycache__
 ._*
 
 models
+models_full
 logs
+logs_full

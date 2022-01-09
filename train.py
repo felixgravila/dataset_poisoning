@@ -9,7 +9,7 @@ from absl import app, flags
 from tensorflow.keras.datasets import cifar10, cifar100, fashion_mnist, mnist
 
 
-def get_dataset(dataset_name: str):
+def get_dataset(dataset_name: str, dataset_size: int):
     dsn = dataset_name.lower()
     if dsn == "mnist":
         ds = mnist
@@ -23,6 +23,11 @@ def get_dataset(dataset_name: str):
     (train_X, train_y), (val_X, val_y) = ds.load_data()
     train_X = train_X / 255
     val_X = val_X / 255
+
+    if dataset_size > 0:
+        dataset_size = min(dataset_size, len(train_X))
+        train_X = train_X[:dataset_size]
+        train_y = train_y[:dataset_size]
 
     if train_X.shape[-1] != 3:
         train_X = tf.expand_dims(train_X, -1)
@@ -88,7 +93,9 @@ def make_simple_conv_model(input_shape, num_classes):
     return model
 
 
-def train_model(train_X, train_y, val_X, val_y, num_classes, save_dir, logs_dir):
+def train_model(
+    train_X, train_y, val_X, val_y, num_classes, save_dir, logs_dir, batch_size
+):
     model = make_simple_conv_model(
         input_shape=train_X.shape[1:], num_classes=num_classes
     )
@@ -109,8 +116,8 @@ def train_model(train_X, train_y, val_X, val_y, num_classes, save_dir, logs_dir)
         train_y,
         validation_data=(val_X, val_y),
         epochs=100,
-        batch_size=256,
-        validation_batch_size=256,
+        batch_size=batch_size,
+        validation_batch_size=batch_size,
         callbacks=callbacks,
     )
 
@@ -129,7 +136,7 @@ def main(argv):
     if not os.path.isdir(LOGS_ROOT_DIR):
         os.makedirs(LOGS_ROOT_DIR)
 
-    (train_X, train_y), (val_X, val_y) = get_dataset(ds)
+    (train_X, train_y), (val_X, val_y) = get_dataset(ds, FLAGS.dataset_size)
     label_population = list(np.unique(train_y))
 
     poison_percs = map(int, FLAGS.percents)
@@ -153,6 +160,7 @@ def main(argv):
             num_classes=len(label_population),
             save_dir=modeldir,
             logs_dir=os.path.join(LOGS_ROOT_DIR, str(poison_perc)),
+            batch_size=FLAGS.batch_size,
         )
 
 
@@ -167,6 +175,8 @@ flags.DEFINE_bool(
     "biased", False, "Have biased poisoning or perfectly random distribution."
 )
 flags.DEFINE_bool("overwrite", False, "Overwrite models.")
+flags.DEFINE_integer("dataset_size", 0, "How much of the dataset to use for training")
+flags.DEFINE_integer("batch_size", 256, "Batch size to use for training")
 
 if __name__ == "__main__":
     app.run(main)
