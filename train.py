@@ -2,7 +2,6 @@ import os
 import random
 from typing import List
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.layers as L
@@ -42,7 +41,7 @@ def get_wrong_label(y: int, population: List[int]):
     return b
 
 
-def poison(y: List[int], population: List[int], percentage: int):
+def poison(y: List[int], population: List[int], percentage: int, biased: bool):
     """
     Poison `percentage` of dataset to be wrong
     y: the label list
@@ -51,6 +50,11 @@ def poison(y: List[int], population: List[int], percentage: int):
     """
     cutoff = round(len(y) * (1 - (percentage / 100)))
     to_mod = y[cutoff:]
+
+    if biased:
+        # only pick one of the first two classes
+        # simulating a systematic labelling error
+        population = population[:2]
 
     wrong_labels = [get_wrong_label(yy, population) for yy in to_mod]
 
@@ -117,8 +121,8 @@ def main(argv):
 
     ds = FLAGS.dataset.lower()
 
-    MODEL_ROOT_DIR = f"models/{ds}"
-    LOGS_ROOT_DIR = f"logs/{ds}"
+    MODEL_ROOT_DIR = f"models/{('b_' if FLAGS.biased else '')}{ds}"
+    LOGS_ROOT_DIR = f"logs/{('b_' if FLAGS.biased else '')}{ds}"
 
     if not os.path.isdir(MODEL_ROOT_DIR):
         os.makedirs(MODEL_ROOT_DIR)
@@ -140,7 +144,7 @@ def main(argv):
 
         print(f"Training for {poison_perc}%")
 
-        poison_y = poison(train_y, label_population, poison_perc)
+        poison_y = poison(train_y, label_population, poison_perc, FLAGS.biased)
         train_model(
             train_X,
             poison_y,
@@ -155,7 +159,12 @@ def main(argv):
 FLAGS = flags.FLAGS
 flags.DEFINE_string("dataset", "mnist", "Dataset to use.")
 flags.DEFINE_list(
-    "percents", [0, 1, 2, 3, 5, 10, 15, 20, 30, 50, 75, 100], "Percents to poison."
+    "percents",
+    [0, 1, 2, 3, 4, 5, 7, 10, 15, 20, 25, 30, 35, 40, 50, 60, 70, 80, 90, 100],
+    "Percents to poison.",
+)
+flags.DEFINE_bool(
+    "biased", False, "Have biased poisoning or perfectly random distribution."
 )
 flags.DEFINE_bool("overwrite", False, "Overwrite models.")
 

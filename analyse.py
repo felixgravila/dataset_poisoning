@@ -1,10 +1,12 @@
 import os
 
 import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.colors as mcolors
 import tensorflow as tf
 from absl import app, flags
 from tensorflow.keras.datasets import cifar10, cifar100, fashion_mnist, mnist
+
+avail_colours = [v for (_, v) in mcolors.TABLEAU_COLORS.items()]
 
 
 def get_dataset(dataset_name: str):
@@ -34,14 +36,19 @@ def get_dataset(dataset_name: str):
 
 def main(argv):
 
-    datasets = [ds.lower() for ds in FLAGS.datasets]
+    datasets = [(ds.lower(), ds.lower()) for ds in FLAGS.datasets]
+    b_datasets = [(ds.lower(), f"b_{ds.lower()}") for ds in FLAGS.datasets]
+    if FLAGS.all:
+        datasets.extend(b_datasets)
+    elif FLAGS.biased:
+        datasets = b_datasets
+
     results = {}
 
-    for ds in datasets:
+    for (ds, model_root) in datasets:
+        print(f"Working on{(' biased' if model_root.startswith('b_') else '')} {ds}...")
 
-        print(f"Working on {ds}...")
-
-        MODEL_ROOT_DIR = os.path.join("models", ds)
+        MODEL_ROOT_DIR = os.path.join("models", model_root)
 
         (_, _), (val_X, val_y) = get_dataset(ds)
 
@@ -59,23 +66,39 @@ def main(argv):
             percs.append(perc)
             accs.append(accuracy)
 
-        results[ds] = {"percs": percs, "accs": accs}
+        results[model_root] = {"percs": percs, "accs": accs}
+
+    used_colours = {}
 
     plt.figure(figsize=(20, 10), facecolor="white")
     for k, v in results.items():
-        plt.plot(v["percs"], [a * 100 for a in v["accs"]], label=k)
+        base_ds = k.replace("b_", "")
+        if base_ds not in used_colours:
+            used_colours[base_ds] = avail_colours.pop()
+        col = used_colours[base_ds]
+        plt.plot(
+            v["percs"],
+            [a * 100 for a in v["accs"]],
+            ("--" if "b_" in k else "-"),
+            label=k,
+            c=col,
+        )
     plt.title(f"Effect of poisoning various datasets")
     plt.xlabel("Percent poisoned")
     plt.ylabel("Accuracy")
     plt.legend()
-
-    plt.savefig(f"{('_'.join(datasets))}.png")
+    plt.tight_layout()
+    plt.savefig(f"{('_'.join([d[1].replace('_','') for d in datasets]))}.png")
 
 
 FLAGS = flags.FLAGS
 flags.DEFINE_list(
     "datasets", ["mnist", "fashion_mnist", "cifar10", "cifar100"], "Datasets to use"
 )
+flags.DEFINE_bool(
+    "biased", False, "Use biased poisoning or perfectly random distribution."
+)
+flags.DEFINE_bool("all", False, "Use both random and biased poisoning.")
 
 if __name__ == "__main__":
     app.run(main)
